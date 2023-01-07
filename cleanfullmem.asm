@@ -8,18 +8,14 @@
 
 
 Start:
-	CLEAN_START
+	CLEAN_START ; this MUST be after "Start" or whatever declared at org $FFFC!!! Otherwise, the code won't ever be executed!
+    ldx #$1E
 
-    lda #12         
-	sta COLUBK
+Start2:
+	stx COLUBK
+	inx
+	jmp Start2
 	
-;	SLEEP 10000 ; error: segment: code fffc                    vs current org: 10396 - Aborting assembly - cleanfullmem.asm (27): error: Origin Reverse-indexed.
-;SLEEP ; no error?!?
-;SLEEP 0 ; cleanfullmem.asm (18): error: Unknown Mnemonic '0'.
-;SLEEP 1 ; error: Unknown Mnemonic '1'.
-;	SLEEP 1 ; with a prefixing indentation / tab, unlike before: 'MACRO ERROR: 'SLEEP': Duration must be > 1'
-	SLEEP 2 ; works!
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Fill  ROM size to exactly 4KB
 ; Also tells 6502 where our program should start (at $FFFC)
