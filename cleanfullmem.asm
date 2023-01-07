@@ -1,4 +1,6 @@
 	include "vcs.h"
+	include "macro.h"	
+
     processor 6502
 
     seg code
@@ -6,23 +8,7 @@
 
 
 Start:
-    sei             ; disable interrupts
-    cld             ; disable the BCD decimal math mode
-    ldx #$FF        ; loads the X register with value #$FF
-    txs             ; transfer X register to S(tack) Pointer
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Clear the Zero Page region (from $00 to $FF)
-; That means the entire TIA register space and also RAM
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    lda #0          ; A = 0
-    ldx #$00        ; X = #$00
-;    sta $FF         ; store zero at memory position $FF before the loop starts
-
-MemLoop:
-    dex             ; decrements X
-    sta $0,X        ; store zero at address $0 + X (does not modify flags)
-    bne MemLoop     ; loop until X == 0 (until z-flag is set by previous DEX)
+	CLEAN_START
 
     lda #12         
 	sta COLUBK
