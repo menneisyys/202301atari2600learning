@@ -9,13 +9,43 @@
 
 Start:
 	CLEAN_START ; this MUST be after "Start" or whatever declared at org $FFFC!!! Otherwise, the code won't ever be executed!
-    ldx #$1E
+    lda #$1E
 ;    stx COLUBK
 
 Start2:
-	stx COLUBK
-	inx
-	inx
+	sta COLUBK
+	adc #$04
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	
 	jmp Start2
 
 	
