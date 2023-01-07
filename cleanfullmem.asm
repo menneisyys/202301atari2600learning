@@ -13,7 +13,9 @@ Start:
 ;    stx COLUBK
 
 Start2:
-	inc COLUBK
+	ldx COLUBK
+	inx
+	stx COLUBK
 	jmp Start2
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
