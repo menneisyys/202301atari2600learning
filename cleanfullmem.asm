@@ -3,6 +3,7 @@
     seg code
     org $F000       ; define the ROM code origin at $F000
 
+;	include "vcs.h"
 Start:
     sei             ; disable interrupts
     cld             ; disable the BCD decimal math mode
@@ -23,7 +24,7 @@ MemLoop:
     bne MemLoop     ; loop until X == 0 (until z-flag is set by previous DEX)
 
     lda #12         
-	sta $09
+;	sta COLUBK
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Fill  ROM size to exactly 4KB
