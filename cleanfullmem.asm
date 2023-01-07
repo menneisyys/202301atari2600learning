@@ -22,6 +22,9 @@ MemLoop:
     sta $0,X        ; store zero at address $0 + X (does not modify flags)
     bne MemLoop     ; loop until X == 0 (until z-flag is set by previous DEX)
 
+    lda #12         
+	sta $09
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Fill  ROM size to exactly 4KB
 ; Also tells 6502 where our program should start (at $FFFC)
