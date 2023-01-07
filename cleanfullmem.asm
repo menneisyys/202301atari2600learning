@@ -9,7 +9,7 @@
 
 Start:
 	CLEAN_START ; this MUST be after "Start" or whatever declared at org $FFFC!!! Otherwise, the code won't ever be executed!
-    ldx #$3E
+    ldx #$1E
 ;    stx COLUBK
 
 Start2:
@@ -17,6 +17,7 @@ Start2:
 	inx
 	inx
 	jmp Start2
+
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Fill  ROM size to exactly 4KB
