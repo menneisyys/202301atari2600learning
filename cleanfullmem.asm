@@ -14,8 +14,8 @@ Start:
 ; That means the entire TIA register space and also RAM
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     lda #0          ; A = 0
-    ldx #$FF        ; X = #$FF
-    sta $FF         ; store zero at memory position $FF before the loop starts
+    ldx #$00        ; X = #$00
+;    sta $FF         ; store zero at memory position $FF before the loop starts
 
 MemLoop:
     dex             ; decrements X
