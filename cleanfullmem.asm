@@ -1,71 +1,128 @@
-	processor 6502
+    processor 6502
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Include required files with definitions and macros
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     include "vcs.h"
-	include "macro.h"
+    include "macro.h"
 
-	seg code
-    org $F000
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Start our ROM code
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    seg
+    org $f000
 
-Start:
-	CLEAN_START      ; call macro to safely clear RAM and TIA
+Reset:
+    CLEAN_START
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Start a new frame by turning on VBLANK and VSYNC
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ldx #$80       ; blue background color
+    stx COLUBK
+
+    lda #$1C       ; yellow playfield color
+    sta COLUPF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Start a new frame by configuring VBLANK and VSYNC
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 StartFrame:
-	lda #2           ; same as binary value %00000010
-    sta VBLANK       ; turn on VBLANK
-    sta VSYNC        ; turn on VSYNC
+    lda #02
+    sta VBLANK     ; turn VBLANK on
+    sta VSYNC      ; turn VSYNC on
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Generate the three lines of VSYNC
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	sta WSYNC        ; first scanline
-    sta WSYNC        ; second scanline
-    sta WSYNC        ; third scanline
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    REPEAT 3
+        sta WSYNC  ; three VSYNC scanlines
+    REPEND
 
-	lda #0
-	sta VSYNC        ; turn off VSYNC
+    lda #0
+    sta VSYNC      ; turn VSYNC off
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Let the TIA output the recommended 37 scanlines of VBLANK
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	ldx #37          ; X = 37 (to count 37 scanlines)
-LoopVBlank:
-	sta WSYNC        ; hit WSYNC and wait for the next scanline
-	dex				 ; X--
-    bne LoopVBlank   ; loop while X != 0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Let the TIA output the 37 recommended lines of VBLANK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    REPEAT 37
+        sta WSYNC
+    REPEND
 
-	lda #0
-	sta VBLANK		 ; turn off VBLANK
+    lda #0
+    sta VBLANK     ; turn VBLANK off
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Draw 192 visible scanlines (kernel)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	ldx #192		 ; counter for 192 visible scanlines
-LoopVisible:
-    stx COLUBK       ; set the background color
-    sta WSYNC		 ; wait for the next scanline
-	dex				 ; X--
-	bne LoopVisible  ; loop while X != 0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Set the CTRLPF register to allow playfield reflect
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ldx #%00000001 ; CTRLPF register (D0 is the reflect flag)
+    stx CTRLPF
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Output 30 more VBLANK lines (overscan) to complete our frame
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	lda #2
-	sta VBLANK       ; hit and turn on VBLANK again
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Draw the 192 visible scanlines
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Skip 7 scanlines with no PF set
+    ldx #0
+    stx PF0
+    stx PF1
+    stx PF2
+    REPEAT 7
+        sta WSYNC
+    REPEND
 
-	ldx #30			 ; counter for 30 scanlines
-LoopOverscan:
-	sta WSYNC		 ; wait for the next scanline
-	dex				 ; X--
-	bne	LoopOverscan ; loop while X != 0
+    ; Set the PF0 to 1110 (LSB first) and PF1-PF2 as 1111 1111
+    ldx #%11100000
+    stx PF0
+    ldx #%11111111
+    stx PF1
+    stx PF2
+    REPEAT 7
+       sta WSYNC   ; repeat PF config for 7 scanlines
+    REPEND
 
-	jmp StartFrame   ; go to next frame
+    ; Set the next 164 lines only with PF0 third bit enabled
+    ldx #%00100000
+    stx PF0
+    ldx #0
+    stx PF1
+    stx PF2
+    REPEAT 164
+       sta WSYNC
+    REPEND
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Complete my ROM size to 4KB
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	org $FFFC
-	.word Start
-	.word Start
+    ; Set the PF0 to 1110 (LSB first) and PF1-PF2 as 1111 1111
+    ldx #%11101111
+    stx PF0
+    ldx #%11111111
+    stx PF1
+    stx PF2
+    REPEAT 7
+       sta WSYNC   ; repeat PF config for 7 scanlines
+    REPEND
+
+    ; Skip 7 vertical lines with no PF set
+    ldx #0
+    stx PF0
+    stx PF1
+    stx PF2
+    REPEAT 7
+        sta WSYNC
+    REPEND
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Output 30 more VBLANK overscan lines to complete our frame
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    lda #2
+    sta VBLANK     ; enable VBLANK back again
+    REPEAT 30
+       sta WSYNC   ; output the 30 recommended overscan lines
+    REPEND
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Loop to next frame
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    jmp StartFrame
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Complete ROM size
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    org $fffc
+    .word Reset
+    .word Reset
