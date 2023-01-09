@@ -20,11 +20,13 @@
 ; Let's define a variable to hold the starting color
 ; at memory address $81
 BGColor	equ $81
-globalVarForSlowerScrolling: .byte 3
+globalVarForSlowerScrolling equ $82
 
 ; The CLEAN_START macro zeroes RAM and registers
 Start	CLEAN_START
-
+	lda #3
+    sta globalVarForSlowerScrolling
+        
 NextFrame
 ; Enable VBLANK (disable output)
 	lda #2
@@ -71,12 +73,11 @@ LVOver	sta WSYNC
 	
 ; The next frame will start with current color value - 1
 ; to get a downwards scrolling effect
-	dec BGColor
-        ;dec globalVarForSlowerScrolling
-        beq NextFrame
-        lda globalVarForSlowerScrolling
-        sta BGColor
-        lda #$03
+;	dec BGColor
+        dec globalVarForSlowerScrolling
+        bne NextFrame 		; still not reached 0 - do NOT change the color yet!
+        dec BGColor 		; now we can change the color
+        lda #$03			; reinit globalVarForSlowerScrolling
         sta globalVarForSlowerScrolling
 
 ; Go back and do another frame
