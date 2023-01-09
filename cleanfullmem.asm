@@ -17,6 +17,9 @@
 ; and below the visible frame (it'll look letterboxed on
 ; the emulator, but not on a real TV)
 
+
+globalVarForSlowerScrollingStartVal: .byte 3
+
 ; Let's define a variable to hold the starting color
 ; at memory address $81
 BGColor	equ $81
@@ -24,7 +27,7 @@ globalVarForSlowerScrolling equ $82
 
 ; The CLEAN_START macro zeroes RAM and registers
 Start	CLEAN_START
-	lda #3
+	lda globalVarForSlowerScrollingStartVal
     sta globalVarForSlowerScrolling
         
 NextFrame
@@ -77,7 +80,7 @@ LVOver	sta WSYNC
         dec globalVarForSlowerScrolling
         bne NextFrame 		; still not reached 0 - do NOT change the color yet!
         dec BGColor 		; now we can change the color
-        lda #$03			; reinit globalVarForSlowerScrolling
+        lda globalVarForSlowerScrollingStartVal			; reinit globalVarForSlowerScrolling
         sta globalVarForSlowerScrolling
 
 ; Go back and do another frame
