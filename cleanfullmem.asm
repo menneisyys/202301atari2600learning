@@ -24,6 +24,7 @@ globalVarForSlowerScrollingStartVal: .byte 3
 ; at memory address $81
 BGColor	equ $81
 globalVarForSlowerScrolling equ $82
+BGColorBACKUP	equ $83 ; added this to save the current BGColor before in-visible-scanline-area hacking but don't use it ATM as I just add/sub a KNOWN const literal so I don't need to save / restore the previous value
 
 ; The CLEAN_START macro zeroes RAM and registers
 Start	CLEAN_START
@@ -59,9 +60,27 @@ LVBlank	sta WSYNC	; accessing WSYNC stops the CPU until next scanline
 	ldx #192
 	lda BGColor	; load the background color out of RAM
 ScanLoop
-	adc #1		; add 1 to the current background color in A
+; comment the following 'adc' out if not want verically different colors but just two one-color blocks:
+ 	;adc #1		; add 1 to the current background color in A 
 	sta COLUBK	; set the background color
+	
+	; 8 nop's: at about 20% will there be the start of the new colors; with twice as many: about 40% etc. And with no nop's at all, nothing
+	nop
+		nop
+			nop
+				nop
+					nop
+						nop
+							nop
+								nop
+	
+		
+	adc #7 		; change bgcolor to +7 so that the change is clearly visible (1 can be less visible as in most cases it's only an intensity change if at all)
+	sta COLUBK
+	
 	sta WSYNC	; WSYNC doesn't care what value is stored
+	sbc #7 		; resetting *substracting)  the previously added 7 from the acc
+	
 	dex
 	bne ScanLoop
 
@@ -79,7 +98,8 @@ LVOver	sta WSYNC
 ;	dec BGColor
         dec globalVarForSlowerScrolling
         bne NextFrame 		; still not reached 0 - do NOT change the color yet!
-        dec BGColor 		; now we can change the color
+        ; currently FULLY disabled everything color cycling animation here as I just want to see how I can start displaying something else INSIDE a scanline by changing the bg color
+;        dec BGColor 		; now we can change the color
         lda globalVarForSlowerScrollingStartVal			; reinit globalVarForSlowerScrolling
         sta globalVarForSlowerScrolling
 
